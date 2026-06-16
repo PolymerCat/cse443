@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Notification from "@/components/Notification";
 import { usePredictiveExpiryAlerts } from "@/hooks/usePredictiveExpiryAlerts";
 
 export default function ParkNPay() {
+  const router = useRouter(); // ROUTER ACCESS INJECTED
   const [isOneDayPark, setIsOneDayPark] = useState(false);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
@@ -26,27 +28,21 @@ export default function ParkNPay() {
     const START_HOUR = 8;
     const END_HOUR = 18; 
 
-    // Adjust start time based on operating hours (8am - 6pm)
     if (start.getHours() >= END_HOUR) {
-      // After 6pm, starts tomorrow at 8am
       start.setDate(start.getDate() + 1);
       start.setHours(START_HOUR, 0, 0, 0);
     } else if (start.getHours() < START_HOUR) {
-      // Before 8am, starts today at 8am
       start.setHours(START_HOUR, 0, 0, 0);
     }
 
     const end = new Date(start);
 
     if (isOneDayPark) {
-      // 1 day park always ends at 6:00 PM of the effective start day
       end.setHours(END_HOUR, 0, 0, 0);
     } else {
-      // Add selected hours and minutes
       end.setHours(end.getHours() + hours);
       end.setMinutes(end.getMinutes() + minutes);
 
-      // CAP THE END TIME AT 6:00 PM
       const maxEnd = new Date(start);
       maxEnd.setHours(END_HOUR, 0, 0, 0);
 
@@ -74,7 +70,6 @@ export default function ParkNPay() {
     return cost.toFixed(2);
   }, [hours, minutes, isOneDayPark]);
 
-  // Generate dynamic duration string
   const durationString = useMemo(() => {
     if (isOneDayPark) return "1 Day";
     let str = "";
@@ -119,12 +114,12 @@ export default function ParkNPay() {
   const handleCloseSuccess = () => {
     setShowSuccessModal(false);
     setShowNotification(false);
+    router.push('/dashboard'); // Route back to the master workspace upon ticket allocation
   };
 
   return (
     <div className="h-[100dvh] w-full bg-gray-50 md:bg-gray-100 flex items-center justify-center font-sans overflow-hidden">
       
-      {/* Responsive App Container */}
       <div className="w-full max-w-xl h-full bg-white shadow-none md:shadow-2xl flex flex-col relative overflow-hidden">
         
         <Notification 
@@ -132,18 +127,19 @@ export default function ParkNPay() {
           onClose={() => setShowNotification(false)} 
         />
 
-        {/* --- HEADER (Fixed at top) --- */}
+        {/* --- HEADER --- */}
         <header className="bg-gradient-to-b from-orange-400 to-orange-500 pt-6 pb-6 shrink-0 md:rounded-b-none z-10 shadow-sm">
           <div className="flex items-center px-4 mb-4 text-white">
-            <button className="text-2xl font-bold font-mono active:opacity-70">{"<"}</button>
+            {/* BACK ROUTE TRIGGER LINK AT TOP LEFT CONTAINER EDGE */}
+            <button onClick={() => router.push('/dashboard')} className="text-2xl font-bold font-mono active:opacity-70">{"<"}</button>
             <h1 className="flex-1 text-center text-lg font-medium pr-6 text-blue-950">
               Park N Pay
             </h1>
           </div>
           
           <div className="flex items-center justify-center md:justify-start px-6 gap-5">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shrink-0 border border-gray-200 overflow-hidden shadow-sm">
-              <div className="text-[10px] text-center text-gray-400 p-2">Logo</div>
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shrink-0 border border-gray-200 overflow-hidden shadow-sm p-1.5">
+              <img src="/bandaraya_logo.png" alt="Crest Logo" className="w-full height-full object-contain" />
             </div>
             <h2 className="text-blue-900 font-medium text-lg leading-tight">
               City Council Of Penang<br />Island
@@ -151,7 +147,7 @@ export default function ParkNPay() {
           </div>
         </header>
 
-        {/* --- MAIN CONTENT (Scrolls internally) --- */}
+        {/* --- MAIN CONTENT --- */}
         <main className="flex-1 min-h-0 overflow-y-auto px-5 py-8 flex flex-col items-center">
           
           <button className="bg-gradient-to-r from-blue-700 to-blue-400 text-white px-10 py-2 rounded-md font-medium text-lg mb-2 shadow-sm w-full max-w-sm shrink-0">
@@ -166,7 +162,6 @@ export default function ParkNPay() {
               Parking Duration
             </h3>
 
-            {/* 1. One Day Park Option */}
             <div
               className={`w-full border rounded-2xl p-4 flex justify-between items-center mb-4 cursor-pointer transition-colors shadow-sm shrink-0 ${
                 isOneDayPark ? "border-blue-900 bg-blue-50/30" : "border-gray-300 hover:border-gray-400"
@@ -185,7 +180,6 @@ export default function ParkNPay() {
 
             <div className="text-black font-semibold text-sm mb-4 shrink-0">OR</div>
 
-            {/* 2. Hourly Park Option */}
             <div
               className={`w-full border rounded-2xl px-4 py-6 flex flex-col items-center mb-8 cursor-pointer transition-colors shadow-sm shrink-0 ${
                 !isOneDayPark ? "border-blue-900 bg-blue-50/30" : "border-gray-300 hover:border-gray-400"
@@ -197,7 +191,6 @@ export default function ParkNPay() {
                 <span className="text-sm text-gray-500">(RM 1.20 per hour)</span>
               </div>
 
-              {/* Time Controls */}
               <div className={`flex gap-10 w-full justify-center mb-8 transition-opacity duration-300 ${isOneDayPark ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
                 <div className="flex flex-col items-center">
                   <span className="font-semibold text-gray-600 border-b-2 border-gray-300 mb-3 px-4 pb-1">Hour</span>
@@ -223,7 +216,6 @@ export default function ParkNPay() {
               </div>
             </div>
 
-            {/* Set Expiry Alert Toggle */}
             <div className="w-full flex justify-between items-center mb-10 px-2 shrink-0">
               <span className="text-gray-700 font-medium text-lg">Set expiry alert</span>
               <button onClick={() => setIsAlertSet(!isAlertSet)} className={`flex items-center rounded-full w-12 h-6 px-0.5 transition-colors ${isAlertSet ? "bg-gray-300" : "bg-gray-200"}`}>
@@ -231,7 +223,6 @@ export default function ParkNPay() {
               </button>
             </div>
 
-            {/* Action Button */}
             <button 
               onClick={() => setShowConfirmModal(true)}
               className="w-full max-w-xs mt-auto mb-6 bg-gradient-to-r from-blue-700 to-blue-400 text-white rounded-full py-3.5 font-medium text-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition-all shrink-0"
@@ -245,7 +236,6 @@ export default function ParkNPay() {
         {showConfirmModal && (
           <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 w-full max-w-sm animate-in fade-in zoom-in duration-200">
-              
               <div className="text-gray-800 space-y-2 mb-8 text-lg">
                 <p className="font-semibold text-xl mb-4 text-center">Details of parking</p>
                 <p><span className="font-medium text-gray-500">Council:</span> MBPP</p>
@@ -279,7 +269,6 @@ export default function ParkNPay() {
         {showSuccessModal && (
           <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm animate-in fade-in zoom-in duration-200 flex flex-col items-center text-center">
-              
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
                 <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>

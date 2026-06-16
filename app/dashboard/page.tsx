@@ -4,18 +4,15 @@ import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const router = useRouter();
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(0.00);
+  const [walletBalance, setWalletBalance] = useState(64.20); // Syncing with notification mockup state balance
   const [isParkingActive, setIsParkingActive] = useState(false);
   const [parkingTimeLeft, setParkingTimeLeft] = useState(0);
   const [showCompoundModal, setShowCompoundModal] = useState(false);
 
-  // Default notifications list
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: "Welcome to Penang Smart Parking Portal.", time: "Just now" }
-  ]);
+  // Synced notification payload count badge state
+  const unreadCount = 2;
 
-  // Default simulated outstanding fine lists
+  // Outstanding fines
   const [fines, setFines] = useState([
     { id: 'FN-8841', location: 'Lebuh Chulia', type: 'Expired Ticket', amount: 10.00, status: 'Unpaid' }
   ]);
@@ -30,7 +27,6 @@ export default function Dashboard() {
     textMuted: '#666666'
   };
 
-  // Real-time counter simulation for active parking deduction tracking mechanics
   useEffect(() => {
     let interval;
     if (isParkingActive && parkingTimeLeft > 0) {
@@ -38,14 +34,10 @@ export default function Dashboard() {
         setParkingTimeLeft(prev => {
           if (prev <= 1) {
             setIsParkingActive(false);
-            // Push real-time notification loop context when expired
-            setNotifications(n => [{ id: Date.now(), text: "🚨 Your active parking duration has expired!", time: "Just now" }, ...n]);
             return 0;
           }
           return prev - 1;
         });
-
-        // Simulating incremental real-time fee balances collection charges (Deducting RM0.10 per cycle)
         setWalletBalance(prev => Math.max(0, prev - 0.10));
       }, 1000);
     }
@@ -54,23 +46,6 @@ export default function Dashboard() {
 
   const handleReload = () => {
     setWalletBalance(prev => prev + 10.00);
-    setNotifications(n => [{ id: Date.now(), text: "💰 Successful top-up! RM 10.00 added to eWallet.", time: "Just now" }, ...n]);
-  };
-
-  const handleParkNPay = () => {
-    if (isParkingActive) {
-      setIsParkingActive(false);
-      setParkingTimeLeft(0);
-      setNotifications(n => [{ id: Date.now(), text: "🅿️ Parking session stopped manually.", time: "Just now" }, ...n]);
-    } else {
-      if (walletBalance < 1.00) {
-        alert("Insufficient balance to initialize parking session. Minimum RM 1.00 required.");
-        return;
-      }
-      setIsParkingActive(true);
-      setParkingTimeLeft(30); // Simulate a 30-second rapid countdown session loop for assignment validation
-      setNotifications(n => [{ id: Date.now(), text: "🅿️ Real-time active parking initialized for 30 cycles.", time: "Just now" }, ...n]);
-    }
   };
 
   const handlePayFine = (fineId, amount) => {
@@ -80,12 +55,11 @@ export default function Dashboard() {
     }
     setWalletBalance(prev => prev - amount);
     setFines(prevFines => prevFines.filter(f => f.id !== fineId));
-    setNotifications(n => [{ id: Date.now(), text: `✅ Compound ${fineId} settled successfully via eWallet parameters.`, time: "Just now" }, ...n]);
   };
 
   const menuItems = [
     { label: "Find Parking", icon: "📍", action: null },
-    { label: "Park N Pay", icon: "🅿️", action: handleParkNPay },
+    { label: "Park N Pay", icon: "🅿️", action: () => router.push('/parknpay') }, // ROUTED INTERACTION
     { label: "Compound", icon: "📄", action: () => setShowCompoundModal(true) },
     { label: "Monthly Pass", icon: "🎟️", action: null },
     { label: "Change Council", icon: "🏛️", action: null },
@@ -115,8 +89,6 @@ export default function Dashboard() {
         .action-btn-clickable { transition: all 0.2s ease; cursor: pointer; }
         .action-btn-clickable:hover { opacity: 0.9; transform: scale(1.02); }
         .action-btn-clickable:active { transform: scale(0.98); }
-        
-        /* Updated design mechanics to prevent text collisions */
         .menu-item-shell { 
           display: flex; 
           flex-direction: column; 
@@ -148,8 +120,9 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* NOTIFICATION BELL ROUTED CLOSURE */}
         <div 
-          onClick={() => setShowNotifications(!showNotifications)}
+          onClick={() => router.push('/notification')}
           className="action-btn-clickable"
           style={{
             position: 'absolute', top: '20px', right: '20px',
@@ -158,13 +131,12 @@ export default function Dashboard() {
             alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box'
           }}
         >
-          {/* White minimal bell SVG icon */}
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
           
-          {notifications.length > 0 && (
+          {unreadCount > 0 && (
             <div style={{
               position: 'absolute', top: '-2px', right: '-2px',
               backgroundColor: '#e65100', color: 'white', borderRadius: '50%',
@@ -172,7 +144,7 @@ export default function Dashboard() {
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold',
               border: '2px solid #ff7b00'
             }}>
-              {notifications.length}
+              {unreadCount}
             </div>
           )}
         </div>
@@ -193,18 +165,14 @@ export default function Dashboard() {
           </span>
         </div>
 
-        {/* eWallet System Container Area */}
+        {/* eWallet Container */}
         <div style={{
           position: 'absolute', right: '20px', bottom: '25px',
           display: 'flex', flexDirection: 'column', alignItems: 'flex-end', width: '200px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px', position: 'relative' }}>
-            
-            <span style={{ color: colors.deepBlue, fontSize: '14px', fontWeight: '700', marginRight: '8px' }}>
-              eWallet Balance
-            </span>
-          </div>
-
+          <span style={{ color: colors.deepBlue, fontSize: '14px', fontWeight: '700', marginBottom: '2px', marginRight: '8px' }}>
+            eWallet Balance
+          </span>
           <span style={{ color: colors.deepBlue, fontSize: '28px', fontWeight: '800', marginBottom: '2px', marginRight: '8px' }}>
             RM {walletBalance.toFixed(2)}
           </span>
@@ -222,7 +190,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* --- SECTION 2: LIVE RUNNING TIMERS CONTEXT BANNER PANEL --- */}
+      {/* --- SECTION 2: RUNNING BANNER --- */}
       {isParkingActive && (
         <div style={{
           backgroundColor: '#e3f2fd', padding: '12px 20px', display: 'flex',
@@ -233,7 +201,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* --- SECTION 3: MENU LAYOUT --- */}
+      {/* --- SECTION 3: RE-CONFIGURED GRID --- */}
       <div style={{
         padding: '24px 12px 10px 12px',
         display: 'grid',
@@ -244,16 +212,15 @@ export default function Dashboard() {
         {menuItems.map((item, index) => (
           <div 
             key={index} 
-            onClick={item.action ? item.action : () => alert(`${item.label} is currently unmapped container shell context.`)}
+            onClick={item.action ? item.action : () => alert(`${item.label} is an unmapped structural placeholder container.`)}
             className="menu-item-shell action-btn-clickable" 
             style={{ opacity: item.action ? 1 : 0.6 }}
           >
             <div style={{
-              width: '45px', height: '45px', backgroundColor: colors.iconCircleBg,
+              width: '52px', height: '52px', backgroundColor: colors.iconCircleBg,
               borderRadius: '50%', display: 'flex', alignItems: 'center',
               justifyContent: 'center', fontSize: '24px', marginBottom: '8px',
               boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-              border: item.label === "Park N Pay" && isParkingActive ? '2px solid red' : 'none',
               boxSizing: 'border-box'
             }}>
               {item.icon}
@@ -263,39 +230,27 @@ export default function Dashboard() {
               lineHeight: '1.2', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
               overflow: 'hidden', height: '26px'
             }}>
-              {item.label === "Park N Pay" && isParkingActive ? "Stop Parking" : item.label}
+              {item.label}
             </span>
           </div>
         ))}
       </div>
 
-      {/* --- SECTION 4: BLANK FOOTER SPACE WITH LOGOUT ACCENT --- */}
+      <div style={{ flex: 1, backgroundColor: '#ffffff' }} />
+
+      {/* --- SECTION 4: OUTBOUND PORTAL REDIRECT --- */}
       <div style={{ 
-        flex: 1, 
-        backgroundColor: '#ffffff', 
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'flex-end',
-        padding: '0 25px 30px 0'
+        backgroundColor: '#ffffff', position: 'relative', display: 'flex',
+        alignItems: 'flex-end', justifyContent: 'flex-end', padding: '0 25px 30px 0'
       }}>
-        {/* Phone-friendly text link logout component */}
         <button 
           onClick={() => router.push('/')}
           className="action-btn-clickable"
           style={{
-            background: 'none',
-            border: 'none',
-            color: '#757575',
-            fontSize: '14px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '10px'
+            background: 'none', border: 'none', color: '#757575', fontSize: '14px',
+            fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px', padding: '10px'
           }}
         >
-          {/* White/Grey minimal logout SVG icon icon layout frame */}
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#757575" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
             <polyline points="16 17 21 12 16 7"></polyline>
@@ -304,7 +259,8 @@ export default function Dashboard() {
           Logout
         </button>
       </div>
-      {/* --- COMPOUND POPUP MODAL SCREEN OVERLAY --- */}
+
+      {/* --- COMPOUND POPUP MODAL --- */}
       {showCompoundModal && (
         <div style={{
           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -315,7 +271,6 @@ export default function Dashboard() {
               <h3 style={{ margin: 0, color: 'red' }}>📄 Active Compounds</h3>
               <button onClick={() => setShowCompoundModal(false)} style={{ background: 'none', border: 'none', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>✕</button>
             </div>
-            
             <div style={{ overflowY: 'auto', flex: 1, minHeight: '150px' }}>
               {fines.length === 0 ? (
                 <p style={{ textAlign: 'center', color: '#666', marginTop: '30px' }}>No outstanding compounds found.</p>
@@ -339,7 +294,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

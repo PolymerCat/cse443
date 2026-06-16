@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
-// --- Types & Mock Data ---
 type NotificationType = {
   id: string;
   title: string;
@@ -55,7 +55,6 @@ const INITIAL_NOTIFICATIONS: NotificationType[] = [
   }
 ];
 
-// --- Reusable Notification Component ---
 const NotificationItem = ({ 
   notification, 
   onClick 
@@ -65,7 +64,6 @@ const NotificationItem = ({
 }) => {
   const { title, message, time, read, type } = notification;
 
-  // Render specific icon based on notification type
   const renderIcon = () => {
     const baseClasses = "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm";
     
@@ -133,10 +131,9 @@ const NotificationItem = ({
   );
 };
 
-
-// --- Main Page Component ---
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const router = useRouter(); // REGISTER ROUTER CONTROLLER
 
   const handleMarkAsRead = (id: string) => {
     setNotifications(prev => 
@@ -157,18 +154,19 @@ export default function NotificationsPage() {
       
       <div className="w-full max-w-xl h-full bg-white shadow-none md:shadow-2xl flex flex-col relative overflow-hidden">
         
-        {/* --- HEADER (Fixed at top) --- */}
+        {/* --- HEADER --- */}
         <header className="bg-gradient-to-b from-orange-400 to-orange-500 pt-6 pb-6 shrink-0 md:rounded-b-none z-10 shadow-sm">
           <div className="flex items-center px-4 mb-4 text-white">
-            <button className="text-2xl font-bold font-mono active:opacity-70">{"<"}</button>
+            {/* LINK BACK TO DASHBOARD ENVIRONMENT */}
+            <button onClick={() => router.push('/dashboard')} className="text-2xl font-bold font-mono active:opacity-70">{"<"}</button>
             <h1 className="flex-1 text-center text-lg font-medium pr-6 text-blue-950">
               Notifications
             </h1>
           </div>
           
           <div className="flex items-center justify-center md:justify-start px-6 gap-5">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shrink-0 border border-gray-200 overflow-hidden shadow-sm">
-              <div className="text-[10px] text-center text-gray-400 p-2">Logo</div>
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shrink-0 border border-gray-200 overflow-hidden shadow-sm p-1.5">
+              <img src="/bandaraya_logo.png" alt="Crest Logo" className="w-full height-full object-contain" />
             </div>
             <h2 className="text-blue-900 font-medium text-lg leading-tight">
               City Council Of Penang<br />Island
@@ -176,10 +174,9 @@ export default function NotificationsPage() {
           </div>
         </header>
 
-        {/* --- MAIN CONTENT (Scrolls internally) --- */}
+        {/* --- MAIN CONTENT --- */}
         <main className="flex-1 min-h-0 overflow-y-auto bg-gray-50 flex flex-col">
           
-          {/* Subheader / Actions (Sticky) */}
           <div className="px-5 py-4 flex justify-between items-end border-b border-gray-200 bg-white/80 backdrop-blur-md sticky top-0 z-10">
             <div>
               <h3 className="text-blue-950 font-semibold text-xl">
@@ -199,7 +196,6 @@ export default function NotificationsPage() {
             )}
           </div>
 
-          {/* Notifications List using the NotificationItem Component */}
           <div className="px-4 py-4 space-y-3">
             {notifications.map((notif) => (
               <NotificationItem 
@@ -209,7 +205,6 @@ export default function NotificationsPage() {
               />
             ))}
 
-            {/* Empty State */}
             {notifications.length === 0 && (
               <div className="text-center py-16 flex flex-col items-center">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
