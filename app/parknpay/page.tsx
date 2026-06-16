@@ -1,32 +1,30 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Notification from "@/components/Notification";
+import { usePredictiveExpiryAlerts } from "@/hooks/usePredictiveExpiryAlerts";
 
 export default function ParkNPay() {
   const [isOneDayPark, setIsOneDayPark] = useState(false);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [isAlertSet, setIsAlertSet] = useState(false);
-  
-  // Modal states
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
-  // Set the current time only on the client
   useEffect(() => {
     setCurrentTime(new Date());
   }, []);
 
-  // Complex Time Calculation Logic
   const parkingTimes = useMemo(() => {
-    if (!currentTime) return { startStr: "--:--", endStr: "--:--" };
+    if (!currentTime) return { startStr: "--:--", endStr: "--:--", endDate: null };
 
     const start = new Date(currentTime);
     const START_HOUR = 8;
-    const END_HOUR = 18; // 6:00 PM
+    const END_HOUR = 18; 
 
     // Adjust start time based on operating hours (8am - 6pm)
     if (start.getHours() >= END_HOUR) {
@@ -58,18 +56,18 @@ export default function ParkNPay() {
     }
 
     const formatTime = (date: Date) => date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-
-    // Determine if we need to show "(Next day)"
     const isStartNextDay = start.getDate() !== currentTime.getDate();
     const isEndNextDay = end.getDate() !== start.getDate() || isStartNextDay;
 
     return {
       startStr: formatTime(start) + (isStartNextDay ? " (Next day)" : ""),
-      endStr: formatTime(end) + (isEndNextDay ? " (Next day)" : "")
+      endStr: formatTime(end) + (isEndNextDay ? " (Next day)" : ""),
+      endDate: end
     };
   }, [currentTime, hours, minutes, isOneDayPark]);
 
-  // Calculate dynamic cost
+  usePredictiveExpiryAlerts(parkingTimes.endDate, isAlertSet);
+  
   const totalCost = useMemo(() => {
     if (isOneDayPark) return "9.00";
     const cost = (hours * 1.20) + ((minutes / 60) * 1.20);
@@ -129,22 +127,10 @@ export default function ParkNPay() {
       {/* Responsive App Container */}
       <div className="w-full max-w-xl h-full bg-white shadow-none md:shadow-2xl flex flex-col relative overflow-hidden">
         
-        {/* --- TOP NOTIFICATION (Renders over everything) --- */}
-        {showNotification && (
-          <div className="absolute top-4 left-4 right-4 md:max-w-md md:left-1/2 md:-translate-x-1/2 bg-white rounded-2xl shadow-xl p-3 z-[60] animate-in slide-in-from-top-4 fade-in duration-300">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-purple-600 rounded-sm flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <span className="text-xs text-gray-500 font-medium">Penang Smart Parking • Just now</span>
-              </div>
-              <span className="text-gray-400 text-xs">∨</span>
-            </div>
-            <p className="text-gray-800 text-sm font-medium">Parking success</p>
-            <p className="text-gray-500 text-sm">Parking success</p>
-          </div>
-        )}
+        <Notification 
+          show={showNotification} 
+          onClose={() => setShowNotification(false)} 
+        />
 
         {/* --- HEADER (Fixed at top) --- */}
         <header className="bg-gradient-to-b from-orange-400 to-orange-500 pt-6 pb-6 shrink-0 md:rounded-b-none z-10 shadow-sm">
