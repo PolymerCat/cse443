@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import Pusher from 'pusher-js';
+import { usePathname } from 'next/navigation';
 
 export type NotificationType = {
   id: string;
@@ -44,7 +45,8 @@ const INITIAL_NOTIFICATIONS: NotificationType[] = [
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationType[]>(INITIAL_NOTIFICATIONS);
   const [instantAlertMsg, setInstantAlertMsg] = useState<string | null>(null);
-  
+  const pathname = usePathname();
+
   // 3. ADD THIS: Move the fines state here so it is global!
   const [fines, setFines] = useState<FineType[]>([
     { id: 'FN-8841', location: 'Lebuh Chulia', type: 'Expired Ticket', amount: 10.00, status: 'Unpaid' }
@@ -91,11 +93,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   return (
     <NotificationContext.Provider value={{
       notifications, unreadCount, handleMarkAsRead, handleMarkAllAsRead, instantAlertMsg, setInstantAlertMsg,
-      fines, setFines // 5. Pass them down
+      fines, setFines
     }}>
       {children}
       
-      {instantAlertMsg && (
+      {/* UPDATE THIS LINE: Only show if there is a message AND we are NOT on the simulation page */}
+      {instantAlertMsg && pathname !== '/simulation' && (
         <div style={{
           position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
           backgroundColor: '#ffffff', borderLeft: '4px solid #ef4444', borderRadius: '8px',
