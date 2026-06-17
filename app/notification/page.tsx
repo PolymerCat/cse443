@@ -1,59 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
-
-type NotificationType = {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  type: string;
-};
-
-const INITIAL_NOTIFICATIONS: NotificationType[] = [
-  {
-    id: "1",
-    title: "Parking Success",
-    message: "1 Day parking for WA8769Q started. Valid until 12:00 AM (Next day). RM 6.00 has been charged.",
-    time: "Just now",
-    read: false,
-    type: "success"
-  },
-  {
-    id: "2",
-    title: "Expiry Alert: 15 Mins Remaining",
-    message: "Your hourly parking for WA8769Q will expire in 15 minutes at 4:30 PM. Tap to extend.",
-    time: "1 hour ago",
-    read: false,
-    type: "warning"
-  },
-  {
-    id: "3",
-    title: "Parking Expired",
-    message: "Your parking session for WA8769Q has ended.",
-    time: "Yesterday, 6:00 PM",
-    read: true,
-    type: "info"
-  },
-  {
-    id: "4",
-    title: "Top-up Successful",
-    message: "RM 50.00 has been successfully added to your e-wallet. Current balance is RM 64.20.",
-    time: "June 14, 10:20 AM",
-    read: true,
-    type: "success"
-  },
-  {
-    id: "5",
-    title: "System Maintenance",
-    message: "The application will undergo scheduled maintenance on June 18 from 12:00 AM to 4:00 AM.",
-    time: "June 12, 8:00 AM",
-    read: true,
-    type: "info"
-  }
-];
+import { useNotifications, NotificationType } from "@/context/NotificationContext";
 
 const NotificationItem = ({ 
   notification, 
@@ -132,22 +81,10 @@ const NotificationItem = ({
 };
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
-  const router = useRouter(); // REGISTER ROUTER CONTROLLER
-
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notif => 
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
-  };
-
-  const handleMarkAllAsRead = () => {
-    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const router = useRouter(); 
+  
+  // 1. Pull the state directly from our Global Context!
+  const { notifications, unreadCount, handleMarkAsRead, handleMarkAllAsRead } = useNotifications();
 
   return (
     <div className="h-[100dvh] w-full bg-gray-50 md:bg-gray-100 flex items-center justify-center font-sans overflow-hidden">
@@ -157,7 +94,6 @@ export default function NotificationsPage() {
         {/* --- HEADER --- */}
         <header className="bg-gradient-to-b from-orange-400 to-orange-500 pt-6 pb-6 shrink-0 md:rounded-b-none z-10 shadow-sm">
           <div className="flex items-center px-4 mb-4 text-white">
-            {/* LINK BACK TO DASHBOARD ENVIRONMENT */}
             <button onClick={() => router.push('/dashboard')} className="text-2xl font-bold font-mono active:opacity-70">{"<"}</button>
             <h1 className="flex-1 text-center text-lg font-medium pr-6 text-blue-950">
               Notifications

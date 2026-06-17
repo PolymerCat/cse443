@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 export const viewport: Viewport = {
   themeColor: "#fb923c", // The orange from your header
@@ -28,7 +29,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        {children}
+        {/* WRAP CHILDREN WITH THE PROVIDER */}
+        <NotificationProvider>
+          {children}
+        </NotificationProvider>
       </body>
     </html>
   );

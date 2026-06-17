@@ -1,21 +1,18 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useNotifications } from "@/context/NotificationContext"; 
 
 export default function Dashboard() {
   const router = useRouter();
-  const [walletBalance, setWalletBalance] = useState(64.20); // Syncing with notification mockup state balance
+  
+  // 1. Pull the unread count AND the fines array from Global Context
+  const { unreadCount, fines, setFines } = useNotifications(); 
+
+  const [walletBalance, setWalletBalance] = useState(64.20); 
   const [isParkingActive, setIsParkingActive] = useState(false);
   const [parkingTimeLeft, setParkingTimeLeft] = useState(0);
   const [showCompoundModal, setShowCompoundModal] = useState(false);
-
-  // Synced notification payload count badge state
-  const unreadCount = 2;
-
-  // Outstanding fines
-  const [fines, setFines] = useState([
-    { id: 'FN-8841', location: 'Lebuh Chulia', type: 'Expired Ticket', amount: 10.00, status: 'Unpaid' }
-  ]);
 
   const colors = {
     bgOrangeGrad: 'linear-gradient(135deg, #ffb347 0%, #ff7b00 100%)',
@@ -28,7 +25,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    let interval;
+    let interval: NodeJS.Timeout;
     if (isParkingActive && parkingTimeLeft > 0) {
       interval = setInterval(() => {
         setParkingTimeLeft(prev => {
@@ -48,7 +45,7 @@ export default function Dashboard() {
     setWalletBalance(prev => prev + 10.00);
   };
 
-  const handlePayFine = (fineId, amount) => {
+  const handlePayFine = (fineId: string, amount: number) => {
     if (walletBalance < amount) {
       alert("Insufficient eWallet balance to clear this compound ticket fine.");
       return;
@@ -59,7 +56,7 @@ export default function Dashboard() {
 
   const menuItems = [
     { label: "Find Parking", icon: "📍", action: null },
-    { label: "Park N Pay", icon: "🅿️", action: () => router.push('/parknpay') }, // ROUTED INTERACTION
+    { label: "Park N Pay", icon: "🅿️", action: () => router.push('/parknpay') }, 
     { label: "Compound", icon: "📄", action: () => setShowCompoundModal(true) },
     { label: "Monthly Pass", icon: "🎟️", action: null },
     { label: "Change Council", icon: "🏛️", action: null },
@@ -120,7 +117,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* NOTIFICATION BELL ROUTED CLOSURE */}
+        {/* NOTIFICATION BELL */}
         <div 
           onClick={() => router.push('/notification')}
           className="action-btn-clickable"
@@ -136,6 +133,7 @@ export default function Dashboard() {
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
           
+          {/* Badge now reads dynamically from Context! */}
           {unreadCount > 0 && (
             <div style={{
               position: 'absolute', top: '-2px', right: '-2px',
