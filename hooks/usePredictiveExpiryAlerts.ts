@@ -31,10 +31,10 @@ export function usePredictiveExpiryAlerts(
 
     const label = unit === "minutes" ? `${timeRemaining} minutes` : `${timeRemaining} seconds`;
     try {
-      new Notification("Parking Expiry Alert", {
-        body: `Your parking session for WA8769Q will expire in ${label}. Tap to extend.`,
-        icon: "/icon-192x192.png",
-      });
+      // new Notification("Parking Expiry Alert", {
+      //   body: `Your parking session for WA8769Q will expire in ${label}. Tap to extend.`,
+      //   icon: "/icon-192x192.png",
+      // });
       console.log(`[Debug] Successfully fired push notification for ${timeRemaining} ${unit}`);
     } catch (e) {
       console.error("[Debug] Failed to create Notification:", e);

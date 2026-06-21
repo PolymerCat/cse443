@@ -37,30 +37,13 @@ export default function ParkNPay() {
     if (!currentTime) return { startStr: "--:--", endStr: "--:--", endDate: null };
 
     const start = new Date(currentTime);
-    const START_HOUR = 8;
-    const END_HOUR = 18; 
-
-    if (start.getHours() >= END_HOUR) {
-      start.setDate(start.getDate() + 1);
-      start.setHours(START_HOUR, 0, 0, 0);
-    } else if (start.getHours() < START_HOUR) {
-      start.setHours(START_HOUR, 0, 0, 0);
-    }
-
     const end = new Date(start);
 
     if (isOneDayPark) {
-      end.setHours(END_HOUR, 0, 0, 0);
+      end.setHours(18, 0, 0, 0); // End of day
     } else {
       end.setHours(end.getHours() + hours);
       end.setMinutes(end.getMinutes() + minutes);
-
-      const maxEnd = new Date(start);
-      maxEnd.setHours(END_HOUR, 0, 0, 0);
-
-      if (end > maxEnd) {
-        end.setTime(maxEnd.getTime());
-      }
     }
 
     const formatTime = (date: Date) => date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
