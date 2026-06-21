@@ -19,6 +19,13 @@ export default function ParkNPay() {
   
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
+  const handleToggleAlert = async () => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+    setIsAlertSet(!isAlertSet);
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => setCurrentTime(new Date()), 0);
     return () => clearTimeout(timer);
@@ -65,7 +72,7 @@ export default function ParkNPay() {
     };
   }, [currentTime, hours, minutes, isOneDayPark]);
 
-  usePredictiveExpiryAlerts(parkingTimes.endDate, isAlertSet);
+  usePredictiveExpiryAlerts(parkingTimes.endDate, isAlertSet, true);
   
   const totalCost = useMemo(() => {
     if (isOneDayPark) return "9.00";
@@ -233,7 +240,7 @@ export default function ParkNPay() {
 
             <div className="w-full flex justify-between items-center mb-10 px-2 shrink-0">
               <span className="text-gray-700 font-medium text-lg">Set expiry alert</span>
-              <button onClick={() => setIsAlertSet(!isAlertSet)} className={`flex items-center rounded-full w-12 h-6 px-0.5 transition-colors ${isAlertSet ? "bg-gray-300" : "bg-gray-200"}`}>
+              <button onClick={handleToggleAlert} className={`flex items-center rounded-full w-12 h-6 px-0.5 transition-colors ${isAlertSet ? "bg-gray-300" : "bg-gray-200"}`}>
                 <div className={`w-5 h-5 rounded-full transform transition-transform duration-100 shadow-sm ${isAlertSet ? "bg-green-600 translate-x-6" : "bg-white"}`} />
               </button>
             </div>
