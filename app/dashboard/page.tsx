@@ -7,11 +7,10 @@ export default function Dashboard() {
   const router = useRouter();
   
   // 1. Pull the unread count AND the fines array from Global Context
-  const { unreadCount, fines, setFines } = useNotifications(); 
+  const { unreadCount, fines, setFines, parkingSession, setParkingSession } = useNotifications(); 
 
   const [walletBalance, setWalletBalance] = useState(64.20); 
-  const [isParkingActive, setIsParkingActive] = useState(false);
-  const [parkingTimeLeft, setParkingTimeLeft] = useState(0);
+  const [secondsLeft, setSecondsLeft] = useState(0);
   const [showCompoundModal, setShowCompoundModal] = useState(false);
 
   const colors = {
@@ -25,21 +24,27 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isParkingActive && parkingTimeLeft > 0) {
-      interval = setInterval(() => {
-        setParkingTimeLeft(prev => {
-          if (prev <= 1) {
-            setIsParkingActive(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-        setWalletBalance(prev => Math.max(0, prev - 0.10));
-      }, 1000);
+    if (!parkingSession) {
+      return;
     }
+
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.floor((new Date(parkingSession.endTime).getTime() - Date.now()) / 1000));
+      setSecondsLeft(remaining);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [isParkingActive, parkingTimeLeft]);
+  }, [parkingSession]);
+
+  const isParkingActive = Boolean(parkingSession && secondsLeft > 0);
+  const formatCountdown = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return [hours, minutes, seconds].map(value => String(value).padStart(2, "0")).join(":");
+  };
 
   const handleReload = () => {
     setWalletBalance(prev => prev + 10.00);
@@ -52,6 +57,10 @@ export default function Dashboard() {
     }
     setWalletBalance(prev => prev - amount);
     setFines(prevFines => prevFines.filter(f => f.id !== fineId));
+  };
+
+  const handleClearSession = () => {
+    setParkingSession(null);
   };
 
   const menuItems = [
@@ -189,13 +198,26 @@ export default function Dashboard() {
       </div>
 
       {/* --- SECTION 2: RUNNING BANNER --- */}
-      {isParkingActive && (
+      {parkingSession && (
         <div style={{
           backgroundColor: '#e3f2fd', padding: '12px 20px', display: 'flex',
           justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #bbdefb'
         }}>
-          <span style={{ color: '#0d47a1', fontWeight: '600', fontSize: '13px' }}>⏳ Active Session Auto-Deducting Fee...</span>
-          <span style={{ color: 'red', fontWeight: '700', fontSize: '15px' }}>{parkingTimeLeft}s left</span>
+          <div>
+            <span style={{ color: '#0d47a1', fontWeight: '700', fontSize: '13px' }}>
+              {isParkingActive ? 'Active parking session' : 'Parking session expired'}
+            </span>
+            <div style={{ color: '#555', fontSize: '11px', marginTop: '2px' }}>
+              {parkingSession.plate} at {parkingSession.location}
+            </div>
+          </div>
+          <button
+            onClick={handleClearSession}
+            title="Clear demo parking session"
+            style={{ background: 'none', border: 'none', color: isParkingActive ? 'red' : '#c62828', fontWeight: '800', fontSize: '15px', cursor: 'pointer' }}
+          >
+            {isParkingActive ? formatCountdown(secondsLeft) : 'Late'}
+          </button>
         </div>
       )}
 

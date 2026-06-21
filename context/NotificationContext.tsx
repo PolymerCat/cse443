@@ -23,6 +23,16 @@ export type FineType = {
   plate?: string;
 };
 
+export type ParkingSessionType = {
+  plate: string;
+  location: string;
+  startTime: string;
+  endTime: string;
+  durationLabel: string;
+  paidAmount: number;
+  isOneDayPark: boolean;
+};
+
 type NotificationContextType = {
   notifications: NotificationType[];
   unreadCount: number;
@@ -33,6 +43,8 @@ type NotificationContextType = {
   // 2. ADD THESE: Expose fines to the app
   fines: FineType[];
   setFines: React.Dispatch<React.SetStateAction<FineType[]>>;
+  parkingSession: ParkingSessionType | null;
+  setParkingSession: React.Dispatch<React.SetStateAction<ParkingSessionType | null>>;
 };
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -51,6 +63,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [fines, setFines] = useState<FineType[]>([
     { id: 'FN-8841', location: 'Lebuh Chulia', type: 'Expired Ticket', amount: 10.00, status: 'Unpaid' }
   ]);
+  const [parkingSession, setParkingSession] = useState<ParkingSessionType | null>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -65,7 +78,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     const channel = pusher.subscribe(`vehicle-${myVehiclePlate}`);
 
-    channel.bind('new-compound', (newFineData: any) => {
+    channel.bind('new-compound', (newFineData: FineType) => {
       
       // 4. ADD THIS: Add the new fine to the global Compounds list
       setFines(prev => [newFineData, ...prev]);
@@ -93,7 +106,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   return (
     <NotificationContext.Provider value={{
       notifications, unreadCount, handleMarkAsRead, handleMarkAllAsRead, instantAlertMsg, setInstantAlertMsg,
-      fines, setFines
+      fines, setFines, parkingSession, setParkingSession
     }}>
       {children}
       

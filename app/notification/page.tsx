@@ -149,7 +149,7 @@ export default function NotificationsPage() {
                   </svg>
                 </div>
                 <p className="text-gray-500 font-medium text-lg">No notifications yet</p>
-                <p className="text-gray-400 text-sm mt-1">You're all caught up!</p>
+                <p className="text-gray-400 text-sm mt-1">You are all caught up!</p>
               </div>
             )}
           </div>

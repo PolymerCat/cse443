@@ -12,7 +12,7 @@ const pusher = new Pusher({
 
 export async function POST(request: Request) {
   try {
-    const { licensePlate } = await request.json();
+    const { licensePlate, location, type, amount } = await request.json();
 
     if (!licensePlate) {
       return NextResponse.json({ error: 'License plate required' }, { status: 400 });
@@ -21,9 +21,9 @@ export async function POST(request: Request) {
     // 1. Generate the Fine Data
     const newFine = {
       id: `FN-${Math.floor(Math.random() * 10000)}`,
-      location: 'Lebuh Chulia',
-      type: 'Illegal Parking',
-      amount: 50.00,
+      location: location ?? 'Lebuh Chulia',
+      type: type ?? 'Illegal Parking',
+      amount: typeof amount === 'number' ? amount : 50.00,
       status: 'Unpaid',
       plate: licensePlate
     };

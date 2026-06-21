@@ -4,9 +4,11 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Notification from "@/components/Notification";
 import { usePredictiveExpiryAlerts } from "@/hooks/usePredictiveExpiryAlerts";
+import { useNotifications } from "@/context/NotificationContext";
 
 export default function ParkNPay() {
   const router = useRouter(); // ROUTER ACCESS INJECTED
+  const { setParkingSession } = useNotifications();
   const [isOneDayPark, setIsOneDayPark] = useState(false);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
@@ -18,7 +20,8 @@ export default function ParkNPay() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    setCurrentTime(new Date());
+    const timer = setTimeout(() => setCurrentTime(new Date()), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const parkingTimes = useMemo(() => {
@@ -106,6 +109,18 @@ export default function ParkNPay() {
   };
 
   const handleConfirm = () => {
+    if (!parkingTimes.endDate) return;
+
+    setParkingSession({
+      plate: "WA8769Q",
+      location: "Lebuh Chulia",
+      startTime: new Date().toISOString(),
+      endTime: parkingTimes.endDate.toISOString(),
+      durationLabel: durationString,
+      paidAmount: Number(totalCost),
+      isOneDayPark,
+    });
+
     setShowConfirmModal(false);
     setShowSuccessModal(true);
     setShowNotification(true);

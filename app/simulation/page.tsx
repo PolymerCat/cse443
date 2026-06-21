@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useNotifications } from "@/context/NotificationContext";
 
 export default function JpjSimulation() {
   const [plate, setPlate] = useState('');
   const router = useRouter();
+  const { parkingSession } = useNotifications();
 
   const colors = {
     bgBlue: 'linear-gradient(180deg, #1d52b9 0%, #153c8b 100%)',
@@ -12,18 +14,53 @@ export default function JpjSimulation() {
     textWhite: '#ffffff',
   };
 
-  const handleIssueFine = async (e) => {
+  const calculateFine = (licensePlate: string) => {
+    if (!parkingSession || parkingSession.plate !== licensePlate) {
+      return {
+        type: 'No Active Parking Record',
+        amount: 50.00,
+        details: 'No paid parking session found for this vehicle.'
+      };
+    }
+
+    const lateMinutes = Math.max(0, Math.ceil((Date.now() - new Date(parkingSession.endTime).getTime()) / 60000));
+
+    if (lateMinutes === 0) {
+      return null;
+    }
+
+    return {
+      type: 'Expired Ticket',
+      amount: Math.min(50, 10 + lateMinutes * 2),
+      details: `${lateMinutes} minute${lateMinutes === 1 ? '' : 's'} late.`
+    };
+  };
+
+  const handleCalculatedFine = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!plate) return alert('Please input vehicle plate alignment context.');
+
+    const licensePlate = plate.toUpperCase();
+    const fine = calculateFine(licensePlate);
+
+    if (!fine) {
+      alert(`${licensePlate} still has valid parking. No fine issued.`);
+      return;
+    }
 
     const response = await fetch('/api/fine', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ licensePlate: plate.toUpperCase() })
+      body: JSON.stringify({
+        licensePlate,
+        location: parkingSession?.location ?? 'Lebuh Chulia',
+        type: fine.type,
+        amount: fine.amount,
+      })
     });
 
     if (response.ok) {
-      alert(`🚨 Summon broadcasted to vehicle ${plate.toUpperCase()}!`);
+      alert(`Fine issued to ${licensePlate}: RM ${fine.amount.toFixed(2)} (${fine.details})`);
       setPlate('');
     }
   };
@@ -122,7 +159,7 @@ export default function JpjSimulation() {
 
       {/* Simulation Controller Card */}
       <div style={{ width: '100%', maxWidth: '340px', zIndex: 2 }}>
-        <form onSubmit={handleIssueFine} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <form onSubmit={handleCalculatedFine} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <input 
             type="text"
             value={plate} 

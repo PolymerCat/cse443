@@ -5,6 +5,15 @@ export function usePredictiveExpiryAlerts(endTime: Date | null, isAlertSet: bool
   const alerted15 = useRef(false);
   const alerted10 = useRef(false);
 
+  const sendPushNotification = (minutesRemaining: number) => {
+    if (Notification.permission === "granted") {
+      new Notification("Parking Expiry Alert", {
+        body: `Your parking session for WA8769Q will expire in ${minutesRemaining} minutes. Tap to extend.`,
+        icon: "/icon-192x192.png", 
+      });
+    }
+  };
+
   useEffect(() => {
     if (!endTime || !isAlertSet) return;
 
@@ -35,13 +44,4 @@ export function usePredictiveExpiryAlerts(endTime: Date | null, isAlertSet: bool
 
     return () => clearInterval(intervalId);
   }, [endTime, isAlertSet]);
-
-  const sendPushNotification = (minutesRemaining: number) => {
-    if (Notification.permission === "granted") {
-      new Notification("Parking Expiry Alert", {
-        body: `Your parking session for WA8769Q will expire in ${minutesRemaining} minutes. Tap to extend.`,
-        icon: "/icon-192x192.png", 
-      });
-    }
-  };
 }
