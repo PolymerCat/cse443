@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import Pusher from 'pusher-js';
 import { usePathname } from 'next/navigation';
+import { usePredictiveExpiryAlerts } from '@/hooks/usePredictiveExpiryAlerts';
 
 export type NotificationType = {
   id: string;
@@ -31,6 +32,7 @@ export type ParkingSessionType = {
   durationLabel: string;
   paidAmount: number;
   isOneDayPark: boolean;
+  isAlertSet?: boolean;
 };
 
 type NotificationContextType = {
@@ -102,6 +104,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       channel.unsubscribe();
     };
   }, []);
+
+  const parsedEndTime = useMemo(() => {
+    return parkingSession?.endTime ? new Date(parkingSession.endTime) : null;
+  }, [parkingSession?.endTime]);
+
+  usePredictiveExpiryAlerts(
+    parsedEndTime,
+    parkingSession?.isAlertSet ?? false,
+    true, // debugSeconds
+    (timeRemaining, unit) => {
+      setInstantAlertMsg(`🚨 Expiry Alert: Your parking session will expire in ${timeRemaining} ${unit}.`);
+      setTimeout(() => setInstantAlertMsg(null), 8000);
+    }
+  );
 
   return (
     <NotificationContext.Provider value={{

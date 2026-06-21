@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Notification from "@/components/Notification";
-import { usePredictiveExpiryAlerts } from "@/hooks/usePredictiveExpiryAlerts";
 import { useNotifications } from "@/context/NotificationContext";
 
 export default function ParkNPay() {
@@ -20,8 +19,11 @@ export default function ParkNPay() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   const handleToggleAlert = async () => {
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
-      await Notification.requestPermission();
+    if (typeof window !== "undefined" && "Notification" in window) {
+      const GLBNotification = (globalThis as any).Notification;
+      if (GLBNotification && GLBNotification.permission === "default") {
+        await GLBNotification.requestPermission();
+      }
     }
     setIsAlertSet(!isAlertSet);
   };
@@ -71,8 +73,6 @@ export default function ParkNPay() {
       endDate: end
     };
   }, [currentTime, hours, minutes, isOneDayPark]);
-
-  usePredictiveExpiryAlerts(parkingTimes.endDate, isAlertSet, true);
   
   const totalCost = useMemo(() => {
     if (isOneDayPark) return "9.00";
@@ -126,6 +126,7 @@ export default function ParkNPay() {
       durationLabel: durationString,
       paidAmount: Number(totalCost),
       isOneDayPark,
+      isAlertSet,
     });
 
     setShowConfirmModal(false);
